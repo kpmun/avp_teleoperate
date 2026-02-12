@@ -21,7 +21,7 @@ from teleop.robot_control.hand_retargeting import HandRetargeting, HandType
 from teleop.utils.weighted_moving_filter import WeightedMovingFilter
 
 import logging_mp
-logger_mp = logging_mp.get_logger(__name__)
+logger_mp = logging_mp.getLogger(__name__)
 
 
 Dex3_Num_Motors = 7

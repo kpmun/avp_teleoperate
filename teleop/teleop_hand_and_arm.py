@@ -3,8 +3,8 @@ import argparse
 from multiprocessing import Value, Array, Lock
 import threading
 import logging_mp
-logging_mp.basic_config(level=logging_mp.INFO)
-logger_mp = logging_mp.get_logger(__name__)
+logging_mp.basicConfig(level=logging_mp.INFO)
+logger_mp = logging_mp.getLogger(__name__)
 
 import os 
 import sys
@@ -116,7 +116,7 @@ if __name__ == '__main__':
             listen_keyboard_thread.start()
 
         # image client
-        img_client = ImageClient(host=args.img_server_ip)
+        img_client = ImageClient(host=args.img_server_ip, request_bgr=True)
         camera_config = img_client.get_cam_config()
         logger_mp.debug(f"Camera config: {camera_config}")
         xr_need_local_img = not (args.display_mode == 'pass-through' or camera_config['head_camera']['enable_webrtc'])
@@ -251,7 +251,7 @@ if __name__ == '__main__':
         while not START and not STOP: # wait for start or stop signal.
             time.sleep(0.033)
             if camera_config['head_camera']['enable_zmq'] and xr_need_local_img:
-                head_img, _ = img_client.get_head_frame()
+                head_img = img_client.get_head_frame()
                 tv_wrapper.render_to_xr(head_img)
 
         logger_mp.info("---------------------🚀start Tracking🚀-------------------------")
@@ -262,15 +262,15 @@ if __name__ == '__main__':
             # get image
             if camera_config['head_camera']['enable_zmq']:
                 if args.record or xr_need_local_img:
-                    head_img, head_img_fps = img_client.get_head_frame()
+                    head_img = img_client.get_head_frame()
                 if xr_need_local_img:
                     tv_wrapper.render_to_xr(head_img)
             if camera_config['left_wrist_camera']['enable_zmq']:
                 if args.record:
-                    left_wrist_img, _ = img_client.get_left_wrist_frame()
+                    left_wrist_img = img_client.get_left_wrist_frame()
             if camera_config['right_wrist_camera']['enable_zmq']:
                 if args.record:
-                    right_wrist_img, _ = img_client.get_right_wrist_frame()
+                    right_wrist_img = img_client.get_right_wrist_frame()
 
             # record mode
             if args.record and RECORD_TOGGLE:
@@ -387,18 +387,18 @@ if __name__ == '__main__':
                     depths = {}
                     if camera_config['head_camera']['binocular']:
                         if head_img is not None:
-                            colors[f"color_{0}"] = head_img[:, :camera_config['head_camera']['image_shape'][1]//2]
-                            colors[f"color_{1}"] = head_img[:, camera_config['head_camera']['image_shape'][1]//2:]
+                            colors[f"color_{0}"] = head_img.bgr[:, :camera_config['head_camera']['image_shape'][1]//2]
+                            colors[f"color_{1}"] = head_img.bgr[:, camera_config['head_camera']['image_shape'][1]//2:]
                         else:
                             logger_mp.warning("Head image is None!")
                         if camera_config['left_wrist_camera']['enable_zmq']:
                             if left_wrist_img is not None:
-                                colors[f"color_{2}"] = left_wrist_img
+                                colors[f"color_{2}"] = left_wrist_img.bgr
                             else:
                                 logger_mp.warning("Left wrist image is None!")
                         if camera_config['right_wrist_camera']['enable_zmq']:
                             if right_wrist_img is not None:
-                                colors[f"color_{3}"] = right_wrist_img
+                                colors[f"color_{3}"] = right_wrist_img.bgr
                             else:
                                 logger_mp.warning("Right wrist image is None!")
                     else:
@@ -408,12 +408,12 @@ if __name__ == '__main__':
                             logger_mp.warning("Head image is None!")
                         if camera_config['left_wrist_camera']['enable_zmq']:
                             if left_wrist_img is not None:
-                                colors[f"color_{1}"] = left_wrist_img
+                                colors[f"color_{1}"] = left_wrist_img.bgr
                             else:
                                 logger_mp.warning("Left wrist image is None!")
                         if camera_config['right_wrist_camera']['enable_zmq']:
                             if right_wrist_img is not None:
-                                colors[f"color_{2}"] = right_wrist_img
+                                colors[f"color_{2}"] = right_wrist_img.bgr
                             else:
                                 logger_mp.warning("Right wrist image is None!")
                     states = {
